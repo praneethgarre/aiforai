@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Smart Summary — LectureLens AI</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <style>
+    .sum-wrap { max-width:840px; margin:0 auto; padding:36px 0 100px; }
+    .sum-hdr { background:linear-gradient(135deg,rgba(20,184,166,0.08),rgba(59,130,246,0.08)); border:1px solid rgba(20,184,166,0.2); border-radius:18px; padding:28px 30px; margin-bottom:22px; }
+    .sum-hdr h1 { font-size:1.7rem; margin-bottom:10px; }
+    .overview { font-size:0.9rem; color:var(--text2); line-height:1.7; padding:13px 16px; background:rgba(0,0,0,0.2); border-radius:10px; border-left:3px solid var(--teal); }
+    .sec { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px 26px; margin-bottom:14px; }
+    .sec h3 { font-size:0.95rem; margin-bottom:14px; display:flex; align-items:center; gap:10px; }
+    .sn { width:24px; height:24px; border-radius:6px; background:rgba(20,184,166,0.15); color:var(--teal); display:flex; align-items:center; justify-content:center; font-size:0.68rem; font-weight:700; flex-shrink:0; }
+    .blist { display:flex; flex-direction:column; gap:7px; }
+    .bitem { display:flex; align-items:flex-start; gap:10px; font-size:0.9rem; padding:9px 12px; background:var(--surface2); border-radius:8px; }
+    .bitem::before { content:'▸'; color:var(--teal); flex-shrink:0; font-size:0.8rem; margin-top:1px; }
+    .mustknow { margin-top:14px; padding:12px 14px; background:rgba(245,158,11,0.07); border:1px solid rgba(245,158,11,0.15); border-radius:10px; }
+    .mustknow h5 { font-size:0.7rem; font-weight:700; color:var(--amber); margin-bottom:7px; text-transform:uppercase; }
+    .mustknow li { font-size:0.85rem; color:var(--text2); list-style:none; display:flex; gap:8px; padding:3px 0; }
+    .mustknow li::before { content:'★'; color:var(--amber); font-size:0.65rem; margin-top:2px; flex-shrink:0; }
+    .formula-chips { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+    .fchip { padding:7px 14px; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.25); border-radius:8px; font-family:'Syne',monospace; font-size:0.85rem; color:#c4b5fd; }
+    .conn-item { display:flex; align-items:center; gap:10px; font-size:0.875rem; flex-wrap:wrap; padding:8px 0; border-bottom:1px solid var(--border); }
+    .conn-item:last-child { border:none; }
+    .cnode { padding:5px 12px; background:rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.2); border-radius:6px; color:var(--accent2); font-weight:500; }
+    .crel { color:var(--text3); font-size:0.8rem; font-style:italic; }
+    .crel::before,.crel::after { content:'—'; margin:0 4px; }
+    .etip { display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-bottom:1px solid rgba(245,158,11,0.1); font-size:0.875rem; color:var(--text2); }
+    .etip:last-child { border:none; }
+    .final-note { background:linear-gradient(135deg,rgba(59,130,246,0.08),rgba(20,184,166,0.08)); border:1px solid rgba(20,184,166,0.2); border-radius:14px; padding:22px 26px; text-align:center; margin-bottom:22px; font-size:1rem; font-style:italic; }
+    .empty-state { text-align:center; padding:80px; }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo"><div class="lens">🎓</div> LectureLens AI</a>
+  <div class="nav-links"><a href="/">Home</a><a href="/capture">Capture</a><a href="/notes">Notes</a><a href="/learn">Learn</a></div>
+  <a href="/capture" class="nav-cta">Start Learning →</a>
+</nav>
+<div class="stage-bar">
+  <a href="/capture" class="stage-item done"><div class="stage-dot">✓</div> Capture</a><span class="stage-arrow">›</span>
+  <a href="/notes" class="stage-item done"><div class="stage-dot">✓</div> Notes</a><span class="stage-arrow">›</span>
+  <a href="/learn" class="stage-item done"><div class="stage-dot">✓</div> Learn</a><span class="stage-arrow">›</span>
+  <a href="/quiz" class="stage-item done"><div class="stage-dot">✓</div> Quiz</a><span class="stage-arrow">›</span>
+  <a href="/summary" class="stage-item active"><div class="stage-dot">5</div> Summary</a>
+</div>
+
+<main class="page page-with-stages">
+<div class="container sum-wrap">
+  <div class="empty-state" id="emptyState" style="display:none">
+    <div style="font-size:3rem;margin-bottom:16px">📋</div>
+    <h3>No Summary Generated</h3>
+    <p class="text-muted" style="margin-bottom:24px">Go to Learning Hub and generate a summary first.</p>
+    <a href="/learn" class="btn btn-primary">← Learning Hub</a>
+  </div>
+  <div id="sumContent" style="display:none">
+    <div class="sum-hdr">
+      <div style="margin-bottom:10px"><span class="badge badge-teal" id="typeBadge">Summary</span></div>
+      <h1 id="sumTitle">Loading...</h1>
+      <div class="overview" id="sumOverview"></div>
+    </div>
+    <div id="secsList"></div>
+    <div id="formulasSec" style="display:none" class="sec">
+      <h3 style="font-size:0.95rem;margin-bottom:0">🔢 Key Formulas</h3>
+      <div class="formula-chips" id="formulaChips"></div>
+    </div>
+    <div id="connsSec" style="display:none" class="sec">
+      <h3 style="font-size:0.95rem;margin-bottom:14px">🔗 Concept Connections</h3>
+      <div id="connsList"></div>
+    </div>
+    <div id="examSec" style="display:none" class="sec" style="background:linear-gradient(135deg,rgba(239,68,68,0.05),rgba(245,158,11,0.05))">
+      <h3 style="font-size:0.95rem;margin-bottom:14px">🎯 Exam Tips</h3>
+      <div id="examList"></div>
+    </div>
+    <div class="final-note" id="finalNote"></div>
+  </div>
+</div>
+</main>
+
+<div class="action-bar">
+  <div class="container"><div class="inner">
+    <span style="font-size:0.875rem;color:var(--text2)">Learning session complete! 🎉</span>
+    <div style="display:flex;gap:12px">
+      <a href="/quiz" class="btn btn-outline btn-sm">← Retake Quiz</a>
+      <a href="/capture" class="btn btn-primary btn-sm">New Lecture →</a>
+    </div>
+  </div></div>
+</div>
+
+<div id="toast"></div>
+<script src="/js/utils.js"></script>
+<script>
+  const summary = Store.get('summary');
+  if (!summary) {
+    document.getElementById('emptyState').style.display='block';
+  } else {
+    document.getElementById('sumContent').style.display='block';
+    render(summary);
+  }
+
+  function render(s) {
+    const types = {short:'⚡ Quick Recap', exam:'🎯 Exam Focus', conceptmap:'🗺️ Concept Map'};
+    document.getElementById('typeBadge').textContent = types[s.type]||'Summary';
+    document.getElementById('sumTitle').textContent = s.title||'Smart Summary';
+    document.getElementById('sumOverview').textContent = s.overview||'';
+
+    const secsList = document.getElementById('secsList');
+    (s.sections||[]).forEach((sec,i) => {
+      const d = document.createElement('div'); d.className='sec';
+      d.innerHTML=`<h3><span class="sn">${i+1}</span>${sec.heading}</h3>
+        <div class="blist">${(sec.points||[]).map(p=>`<div class="bitem">${p}</div>`).join('')}</div>
+        ${sec.mustKnow?.length?`<div class="mustknow"><h5>Must Know</h5><ul>${sec.mustKnow.map(m=>`<li>${m}</li>`).join('')}</ul></div>`:''}`;
+      secsList.appendChild(d);
+    });
+
+    if (s.keyFormulas?.length) {
+      document.getElementById('formulasSec').style.display='block';
+      const chips = document.getElementById('formulaChips');
+      s.keyFormulas.forEach(f => { const c=document.createElement('div'); c.className='fchip'; c.textContent=f; chips.appendChild(c); });
+    }
+
+    if (s.conceptConnections?.length) {
+      document.getElementById('connsSec').style.display='block';
+      const list = document.getElementById('connsList');
+      s.conceptConnections.forEach(c => {
+        const d=document.createElement('div'); d.className='conn-item';
+        d.innerHTML=`<div class="cnode">${c.from}</div><div class="crel">${c.relationship}</div><div class="cnode">${c.to}</div>`;
+        list.appendChild(d);
+      });
+    }
+
+    if (s.examTips?.length) {
+      document.getElementById('examSec').style.display='block';
+      const list=document.getElementById('examList');
+      s.examTips.forEach(t => { const d=document.createElement('div'); d.className='etip'; d.innerHTML=`<span>🎯</span>${t}`; list.appendChild(d); });
+    }
+
+    if (s.finalNote) document.getElementById('finalNote').innerHTML=`💬 "${s.finalNote}"`;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Capture — LectureLens AI</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <style>
+    .page-hdr { padding:36px 0 24px; }
+    .page-hdr .bc { font-size:0.8rem; color:var(--text3); margin-bottom:8px; }
+    .page-hdr h1 { font-size:1.8rem; margin-bottom:6px; }
+    .page-hdr p { color:var(--text2); }
+
+    /* Two-column input cards */
+    .input-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:32px; }
+
+    .icard {
+      background:var(--surface); border:2px solid var(--border);
+      border-radius:20px; padding:28px;
+      transition:border-color 0.3s;
+    }
+    .icard.active-audio { border-color:var(--accent); }
+    .icard.active-image { border-color:var(--teal); }
+
+    .icard-icon { width:56px; height:56px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.6rem; margin-bottom:16px; }
+    .audio-color { background:rgba(59,130,246,0.15); }
+    .image-color { background:rgba(20,184,166,0.15); }
+
+    .icard h3 { font-size:1rem; margin-bottom:6px; }
+    .icard .desc { font-size:0.82rem; color:var(--text2); margin-bottom:20px; }
+
+    /* Mode tabs */
+    .mode-tabs { display:flex; gap:8px; margin-bottom:16px; }
+    .mode-tab {
+      flex:1; padding:8px; border-radius:8px; border:1px solid var(--border);
+      background:var(--surface2); color:var(--text2); font-size:0.8rem; font-weight:600;
+      cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.2s; text-align:center;
+    }
+    .mode-tab.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+    /* Upload area */
+    .upload-area {
+      border:2px dashed var(--border); border-radius:12px;
+      padding:28px 20px; text-align:center; cursor:pointer;
+      transition:all 0.2s; background:var(--surface2);
+    }
+    .upload-area:hover { border-color:var(--accent); background:rgba(59,130,246,0.05); }
+    .upload-area.dragover { border-color:var(--accent); background:rgba(59,130,246,0.08); }
+    .upload-area .ua-icon { font-size:2rem; margin-bottom:10px; }
+    .upload-area p { font-size:0.85rem; color:var(--text2); margin-bottom:4px; }
+    .upload-area span { font-size:0.75rem; color:var(--text3); }
+
+    .browse-btn {
+      width:100%; margin-top:10px; padding:10px;
+      background:transparent; border:1px solid var(--border);
+      border-radius:8px; color:var(--text2); font-size:0.85rem; font-weight:600;
+      cursor:pointer; font-family:'DM Sans',sans-serif;
+      transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:6px;
+    }
+    .browse-btn:hover { border-color:var(--accent); color:var(--accent2); background:rgba(59,130,246,0.06); }
+
+    /* File preview */
+    .file-preview {
+      display:none; align-items:center; gap:12px;
+      padding:12px 14px; background:var(--surface2);
+      border:1px solid var(--border); border-radius:10px; margin-top:12px;
+    }
+    .file-preview.show { display:flex; }
+    .fp-thumb { width:44px; height:44px; border-radius:8px; object-fit:cover; flex-shrink:0; }
+    .fp-icon { font-size:1.4rem; flex-shrink:0; }
+    .fp-info { flex:1; min-width:0; }
+    .fp-name { font-size:0.85rem; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .fp-size { font-size:0.75rem; color:var(--text3); }
+    .fp-remove { background:none; border:none; color:var(--text3); cursor:pointer; font-size:1rem; padding:4px; flex-shrink:0; transition:color 0.2s; }
+    .fp-remove:hover { color:var(--red); }
+
+    /* Recording */
+    .rec-area { display:none; }
+    .rec-area.show { display:block; }
+    .rec-btn {
+      width:100%; padding:14px; border-radius:10px;
+      border:2px solid var(--border); background:var(--surface2);
+      color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:600;
+      cursor:pointer; transition:all 0.2s;
+      display:flex; align-items:center; justify-content:center; gap:10px;
+    }
+    .rec-btn.recording { border-color:var(--red); background:rgba(239,68,68,0.1); color:var(--red); animation:rpulse 1s ease infinite; }
+    @keyframes rpulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3)} 50%{box-shadow:0 0 0 8px rgba(239,68,68,0)} }
+    .rdot { width:10px; height:10px; border-radius:50%; background:currentColor; }
+    .recording .rdot { animation:rblink 0.8s ease infinite; }
+    @keyframes rblink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .rtimer { text-align:center; font-size:0.82rem; color:var(--text3); margin-top:8px; }
+    .waveform { display:none; justify-content:center; align-items:center; gap:3px; height:28px; margin-top:8px; }
+    .waveform.show { display:flex; }
+    .wbar { width:3px; border-radius:2px; background:var(--accent); animation:wave 0.8s ease infinite; }
+    .wbar:nth-child(1){animation-delay:0s} .wbar:nth-child(2){animation-delay:0.1s} .wbar:nth-child(3){animation-delay:0.2s} .wbar:nth-child(4){animation-delay:0.3s} .wbar:nth-child(5){animation-delay:0.4s}
+    @keyframes wave { 0%,100%{height:4px} 50%{height:22px} }
+
+    /* Settings */
+    .settings-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px; margin-top:24px; }
+    .settings-card h3 { font-size:0.9rem; margin-bottom:16px; }
+    .settings-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .fg label { display:block; font-size:0.78rem; font-weight:600; color:var(--text2); margin-bottom:6px; }
+    .fg select, .fg input {
+      width:100%; padding:10px 12px;
+      background:var(--surface2); border:1px solid var(--border);
+      border-radius:8px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.875rem; outline:none;
+    }
+    .fg select:focus, .fg input:focus { border-color:var(--accent); }
+    .fg select option { background:var(--surface); }
+
+    /* Transcript */
+    .transcript-section { margin-top:24px; display:none; }
+    .transcript-section.show { display:block; }
+    .transcript-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .transcript-box {
+      background:var(--surface2); border:1px solid var(--border); border-radius:12px;
+      padding:18px; max-height:260px; overflow-y:auto;
+      font-size:0.875rem; line-height:1.7; color:var(--text2); white-space:pre-wrap;
+    }
+
+    /* Bottom actions */
+    .bottom-actions { display:flex; gap:14px; align-items:center; margin-top:28px; flex-wrap:wrap; padding-bottom:40px; }
+    .status-txt { font-size:0.82rem; color:var(--text3); }
+
+    @media(max-width:768px) {
+      .input-grid { grid-template-columns:1fr; }
+      .settings-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo"><div class="lens">🎓</div> LectureLens AI</a>
+  <div class="nav-links"><a href="/">Home</a><a href="/capture">Capture</a><a href="/notes">Notes</a><a href="/learn">Learn</a></div>
+  <a href="/capture" class="nav-cta">Start Learning →</a>
+</nav>
+
+<div class="stage-bar">
+  <a href="/capture" class="stage-item active"><div class="stage-dot">1</div> Capture</a>
+  <span class="stage-arrow">›</span>
+  <a href="/notes" class="stage-item"><div class="stage-dot">2</div> Notes</a>
+  <span class="stage-arrow">›</span>
+  <a href="/learn" class="stage-item"><div class="stage-dot">3</div> Learn</a>
+  <span class="stage-arrow">›</span>
+  <a href="/quiz" class="stage-item"><div class="stage-dot">4</div> Quiz</a>
+  <span class="stage-arrow">›</span>
+  <a href="/summary" class="stage-item"><div class="stage-dot">5</div> Summary</a>
+</div>
+
+<main class="page page-with-stages">
+<div class="container">
+
+  <div class="page-hdr">
+    <div class="bc">Stage 1 of 3 · Capture & Extract</div>
+    <h1>Upload Your Lecture Content</h1>
+    <p>Choose audio recording or board/notes photo — our AI will extract everything</p>
+  </div>
+
+  <div class="input-grid">
+
+    <!-- ===== AUDIO CARD ===== -->
+    <div class="icard" id="audioCard">
+      <div class="icard-icon audio-color">🎙️</div>
+      <h3>Audio Lecture</h3>
+      <p class="desc">Upload a lecture recording or record live from your microphone</p>
+
+      <div class="mode-tabs">
+        <button class="mode-tab on" id="tabUpload" onclick="setAudioMode('upload')">📁 Upload File</button>
+        <button class="mode-tab" id="tabRecord" onclick="setAudioMode('record')">⏺ Record Live</button>
+      </div>
+
+      <!-- UPLOAD MODE -->
+      <div id="uploadMode">
+        <!-- Hidden real file input -->
+        <input type="file" id="audioFileInput" accept="audio/*" style="display:none" onchange="onAudioSelected(this)"/>
+
+        <div class="upload-area" id="audioDrop">
+          <div class="ua-icon">🎧</div>
+          <p>Drag & drop your audio file here</p>
+          <span>MP3, WAV, M4A, OGG, WEBM · max 25MB</span>
+        </div>
+        <button class="browse-btn" onclick="document.getElementById('audioFileInput').click()">
+          📁 Browse Audio File
+        </button>
+
+        <div class="file-preview" id="audioPrev">
+          <span class="fp-icon">🎵</span>
+          <div class="fp-info">
+            <div class="fp-name" id="audioName">—</div>
+            <div class="fp-size" id="audioSize">—</div>
+          </div>
+          <button class="fp-remove" onclick="clearAudio()" title="Remove">✕</button>
+        </div>
+      </div>
+
+      <!-- RECORD MODE -->
+      <div class="rec-area" id="recordMode">
+        <button class="rec-btn" id="recBtn" onclick="toggleRec()">
+          <div class="rdot"></div>
+          <span id="recLabel">Start Recording</span>
+        </button>
+        <div class="waveform" id="waveform">
+          <div class="wbar" style="height:8px"></div>
+          <div class="wbar" style="height:16px"></div>
+          <div class="wbar" style="height:10px"></div>
+          <div class="wbar" style="height:20px"></div>
+          <div class="wbar" style="height:8px"></div>
+        </div>
+        <div class="rtimer" id="rtimer">00:00</div>
+
+        <div class="file-preview" id="recPrev">
+          <span class="fp-icon">🎙️</span>
+          <div class="fp-info">
+            <div class="fp-name" id="recName">—</div>
+            <div class="fp-size" id="recSize">—</div>
+          </div>
+          <button class="fp-remove" onclick="clearRec()" title="Remove">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== IMAGE CARD ===== -->
+    <div class="icard" id="imageCard">
+      <div class="icard-icon image-color">📷</div>
+      <h3>Board Photo / Handwritten Notes</h3>
+      <p class="desc">Upload a photo of the blackboard, whiteboard, or your handwritten notes</p>
+
+      <!-- Hidden real file input -->
+      <input type="file" id="imageFileInput" accept="image/*" style="display:none" onchange="onImageSelected(this)"/>
+
+      <div class="upload-area" id="imageDrop">
+        <div class="ua-icon">🖼️</div>
+        <p>Drag & drop your image here</p>
+        <span>JPG, PNG, WebP · max 10MB</span>
+      </div>
+      <button class="browse-btn" onclick="document.getElementById('imageFileInput').click()">
+        📁 Browse Image File
+      </button>
+
+      <div class="file-preview" id="imagePrev">
+        <img id="imageThumb" src="" alt="" class="fp-thumb"/>
+        <div class="fp-info">
+          <div class="fp-name" id="imageName">—</div>
+          <div class="fp-size" id="imageSize">—</div>
+        </div>
+        <button class="fp-remove" onclick="clearImage()" title="Remove">✕</button>
+      </div>
+    </div>
+
+  </div><!-- /input-grid -->
+
+  <!-- SETTINGS -->
+  <div class="settings-card">
+    <h3>⚙️ Processing Settings</h3>
+    <div class="settings-grid">
+      <div class="fg">
+        <label>Student Level</label>
+        <select id="levelSel">
+          <option value="school">🏫 School (Grade 8–12)</option>
+          <option value="college" selected>🎓 College / Undergraduate</option>
+          <option value="engineering">⚙️ Engineering / Advanced</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Subject (optional)</label>
+        <input type="text" id="subjectIn" placeholder="e.g. Physics, Maths, DSA..."/>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSCRIPT PREVIEW -->
+  <div class="transcript-section" id="transcriptSec">
+    <div class="transcript-hdr">
+      <h3 style="font-size:0.95rem">📝 Extracted Text</h3>
+      <span class="badge badge-green">✓ Ready to Process</span>
+    </div>
+    <div class="transcript-box" id="transcriptBox"></div>
+  </div>
+
+  <!-- BOTTOM ACTIONS -->
+  <div class="bottom-actions">
+    <button class="btn btn-outline" id="extractBtn" onclick="doExtract()" disabled>
+      📄 Extract Text
+    </button>
+    <button class="btn btn-primary btn-lg" id="processBtn" onclick="doProcess()" disabled>
+      🧠 Process with AI → Get Notes
+    </button>
+    <span class="status-txt" id="statusTxt">Select an audio file or image to begin</span>
+  </div>
+
+</div>
+</main>
+
+<div id="toast"></div>
+<script src="/js/utils.js"></script>
+<script>
+  // State
+  let audioFile = null;   // File object for audio
+  let imageFile = null;   // File object for image
+  let transcript = null;  // Extracted text
+  let mediaRec = null, recChunks = [], recInterval = null, recSecs = 0;
+  let audioMode = 'upload'; // 'upload' | 'record'
+
+  // ── AUDIO MODE SWITCH ──────────────────────────────────────────
+  function setAudioMode(m) {
+    audioMode = m;
+    document.getElementById('uploadMode').style.display = m === 'upload' ? 'block' : 'none';
+    document.getElementById('recordMode').style.display  = m === 'record' ? 'block' : 'none';
+    document.getElementById('tabUpload').classList.toggle('on', m === 'upload');
+    document.getElementById('tabRecord').classList.toggle('on', m === 'record');
+  }
+  // Init
+  setAudioMode('upload');
+
+  // ── DRAG & DROP ────────────────────────────────────────────────
+  function setupDrop(dropId, accept, handler) {
+    const el = document.getElementById(dropId);
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('dragover'); });
+    el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+    el.addEventListener('drop', e => {
+      e.preventDefault(); el.classList.remove('dragover');
+      const f = e.dataTransfer.files[0];
+      if (!f) return;
+      if (!f.type.startsWith(accept)) return showToast('Wrong file type', 'error');
+      handler(f);
+    });
+    // Also click on drop area opens picker
+    el.addEventListener('click', () => {
+      if (accept === 'audio') document.getElementById('audioFileInput').click();
+      else document.getElementById('imageFileInput').click();
+    });
+  }
+  setupDrop('audioDrop', 'audio', setAudioFile);
+  setupDrop('imageDrop', 'image', setImageFile);
+
+  // ── AUDIO FILE HANDLING ────────────────────────────────────────
+  function onAudioSelected(input) {
+    if (input.files && input.files[0]) setAudioFile(input.files[0]);
+  }
+
+  function setAudioFile(f) {
+    audioFile = f;
+    document.getElementById('audioName').textContent = f.name;
+    document.getElementById('audioSize').textContent = formatSize(f.size);
+    document.getElementById('audioPrev').classList.add('show');
+    document.getElementById('audioCard').classList.add('active-audio');
+    updateUI();
+    showToast('Audio file loaded ✓', 'success');
+  }
+
+  function clearAudio() {
+    audioFile = null;
+    document.getElementById('audioPrev').classList.remove('show');
+    document.getElementById('audioCard').classList.remove('active-audio');
+    document.getElementById('audioFileInput').value = '';
+    clearTranscript();
+    updateUI();
+  }
+
+  // ── IMAGE FILE HANDLING ────────────────────────────────────────
+  function onImageSelected(input) {
+    if (input.files && input.files[0]) setImageFile(input.files[0]);
+  }
+
+  function setImageFile(f) {
+    imageFile = f;
+    document.getElementById('imageName').textContent = f.name;
+    document.getElementById('imageSize').textContent = formatSize(f.size);
+    const reader = new FileReader();
+    reader.onload = e => document.getElementById('imageThumb').src = e.target.result;
+    reader.readAsDataURL(f);
+    document.getElementById('imagePrev').classList.add('show');
+    document.getElementById('imageCard').classList.add('active-image');
+    updateUI();
+    showToast('Image loaded ✓', 'success');
+  }
+
+  function clearImage() {
+    imageFile = null;
+    document.getElementById('imagePrev').classList.remove('show');
+    document.getElementById('imageThumb').src = '';
+    document.getElementById('imageCard').classList.remove('active-image');
+    document.getElementById('imageFileInput').value = '';
+    clearTranscript();
+    updateUI();
+  }
+
+  // ── LIVE RECORDING ─────────────────────────────────────────────
+  async function toggleRec() {
+    if (!mediaRec || mediaRec.state === 'inactive') {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRec = new MediaRecorder(stream);
+        recChunks = [];
+        mediaRec.ondataavailable = e => { if (e.data.size > 0) recChunks.push(e.data); };
+        mediaRec.onstop = () => {
+          const blob = new Blob(recChunks, { type: 'audio/webm' });
+          const f = new File([blob], `recording_${Date.now()}.webm`, { type: 'audio/webm' });
+          stream.getTracks().forEach(t => t.stop());
+          setAudioFile(f);
+          document.getElementById('recPrev').classList.add('show');
+          document.getElementById('recName').textContent = f.name;
+          document.getElementById('recSize').textContent = formatSize(f.size);
+        };
+        mediaRec.start();
+        recSecs = 0;
+        recInterval = setInterval(() => {
+          recSecs++;
+          const m = String(Math.floor(recSecs/60)).padStart(2,'0');
+          const s = String(recSecs%60).padStart(2,'0');
+          document.getElementById('rtimer').textContent = `${m}:${s}`;
+        }, 1000);
+        document.getElementById('recBtn').classList.add('recording');
+        document.getElementById('recLabel').textContent = 'Stop Recording';
+        document.getElementById('waveform').classList.add('show');
+      } catch(e) {
+        showToast('Microphone permission denied', 'error');
+      }
+    } else {
+      mediaRec.stop();
+      clearInterval(recInterval);
+      document.getElementById('recBtn').classList.remove('recording');
+      document.getElementById('recLabel').textContent = 'Start Recording';
+      document.getElementById('waveform').classList.remove('show');
+    }
+  }
+
+  function clearRec() {
+    audioFile = null;
+    document.getElementById('recPrev').classList.remove('show');
+    document.getElementById('audioCard').classList.remove('active-audio');
+    clearTranscript(); updateUI();
+  }
+
+  // ── HELPERS ────────────────────────────────────────────────────
+  function clearTranscript() {
+    transcript = null;
+    document.getElementById('transcriptSec').classList.remove('show');
+    document.getElementById('transcriptBox').textContent = '';
+  }
+
+  function updateUI() {
+    const hasFile = !!(audioFile || imageFile);
+    document.getElementById('extractBtn').disabled  = !hasFile;
+    document.getElementById('processBtn').disabled  = !transcript;
+    document.getElementById('statusTxt').textContent = hasFile
+      ? (transcript ? '✓ Text extracted — click Process to generate notes' : 'Click Extract Text to begin')
+      : 'Select an audio file or image to begin';
+  }
+
+  // ── EXTRACT TEXT (Stage 1 API call) ───────────────────────────
+  async function doExtract() {
+    if (!audioFile && !imageFile) return showToast('Please select a file first', 'error');
+    showLoader('Extracting content...', 'Sending to Azure AI for processing');
+    try {
+      const fd = new FormData();
+      let result;
+      if (imageFile) {
+        fd.append('image', imageFile);
+        result = await apiUpload('/api/transcribe/image', fd);
+      } else {
+        fd.append('audio', audioFile);
+        result = await apiUpload('/api/transcribe/audio', fd);
+      }
+      transcript = result.transcript;
+      document.getElementById('transcriptBox').textContent = transcript;
+      document.getElementById('transcriptSec').classList.add('show');
+      Store.set('transcript', transcript);
+      Store.set('level', document.getElementById('levelSel').value);
+      Store.set('subject', document.getElementById('subjectIn').value);
+      updateUI();
+      showToast('Content extracted successfully!', 'success');
+      if (result.demo) showToast('Demo mode — add Azure keys for real transcription', 'info');
+    } catch(e) {
+      showToast(e.message, 'error');
+    } finally { hideLoader(); }
+  }
+
+  // ── PROCESS NOTES (Stage 2 API call) ──────────────────────────
+  async function doProcess() {
+    if (!transcript) return showToast('Extract content first', 'error');
+    showLoader('Processing with Azure OpenAI...', 'GPT-4o is building your structured notes');
+    try {
+      const result = await apiPost('/api/process/notes', {
+        transcript,
+        level: document.getElementById('levelSel').value,
+        subject: document.getElementById('subjectIn').value
+      });
+      Store.set('notes', result.notes);
+      Store.set('level', document.getElementById('levelSel').value);
+      showToast('Notes ready! Redirecting...', 'success');
+      setTimeout(() => window.location.href = '/notes', 900);
+    } catch(e) {
+      showToast(e.message, 'error');
+    } finally { hideLoader(); }
+  }
+
+  updateUI();
+</script>
+</body>
+</html>

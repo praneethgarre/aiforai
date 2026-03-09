@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>LectureLens AI — From Classroom to Mastery</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <style>
+    .hero {
+      min-height:100vh; display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      text-align:center; padding:80px 2rem 4rem; position:relative;
+    }
+    .hero-glow {
+      position:absolute; width:600px; height:600px;
+      background:radial-gradient(circle,rgba(59,130,246,0.12) 0%,transparent 70%);
+      top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none;
+    }
+    .hero-badge {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 16px; background:rgba(59,130,246,0.1);
+      border:1px solid rgba(59,130,246,0.25); border-radius:20px;
+      font-size:0.8rem; color:var(--accent2); margin-bottom:32px;
+      animation:fadeUp 0.5s ease both;
+    }
+    .pdot { width:6px; height:6px; background:var(--accent); border-radius:50%; animation:pulse 1.5s ease infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .hero h1 { font-size:clamp(2.5rem,6vw,4.5rem); font-weight:800; margin-bottom:24px; animation:fadeUp 0.5s 0.1s ease both; }
+    .grad { background:linear-gradient(135deg,var(--accent2),var(--teal)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .hero p { font-size:1.1rem; color:var(--text2); max-width:560px; margin:0 auto 40px; animation:fadeUp 0.5s 0.2s ease both; }
+    .hero-btns { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; animation:fadeUp 0.5s 0.3s ease both; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    .tech-strip { padding:32px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+    .tech-strip p { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--text3); text-align:center; margin-bottom:16px; }
+    .tech-logos { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+    .chip { display:flex; align-items:center; gap:8px; padding:8px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; font-size:0.8rem; color:var(--text2); }
+    .stages { padding:80px 0; }
+    .sec-label { font-size:0.75rem; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--accent2); margin-bottom:12px; }
+    .stages-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-top:48px; }
+    .scard { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:32px; position:relative; overflow:hidden; transition:transform 0.3s,border-color 0.3s; }
+    .scard::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+    .scard.s1::before { background:linear-gradient(90deg,var(--accent),var(--teal)); }
+    .scard.s2::before { background:linear-gradient(90deg,var(--teal),var(--purple)); }
+    .scard.s3::before { background:linear-gradient(90deg,var(--purple),var(--amber)); }
+    .scard:hover { transform:translateY(-4px); border-color:rgba(99,179,255,0.25); }
+    .snum { font-family:'Syne',sans-serif; font-size:0.7rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:16px; }
+    .sicon { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin-bottom:20px; }
+    .s1 .sicon{background:rgba(59,130,246,0.15)} .s2 .sicon{background:rgba(20,184,166,0.15)} .s3 .sicon{background:rgba(139,92,246,0.15)}
+    .scard h3 { font-size:1.1rem; margin-bottom:10px; }
+    .scard p { font-size:0.875rem; color:var(--text2); margin-bottom:20px; }
+    .sfeats { list-style:none; display:flex; flex-direction:column; gap:6px; }
+    .sfeats li { display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--text3); }
+    .sfeats li::before { content:''; width:4px; height:4px; border-radius:50%; background:var(--accent2); flex-shrink:0; }
+    .cta-section { padding:80px 0; }
+    .cta-card { background:linear-gradient(135deg,rgba(59,130,246,0.08),rgba(20,184,166,0.08)); border:1px solid rgba(59,130,246,0.2); border-radius:24px; padding:64px 48px; text-align:center; }
+    .cta-card h2 { font-size:2rem; margin-bottom:16px; }
+    .cta-card p { color:var(--text2); max-width:480px; margin:0 auto 40px; }
+    footer { padding:32px 0; text-align:center; font-size:0.8rem; color:var(--text3); border-top:1px solid var(--border); }
+    @media(max-width:768px) { .stages-grid{grid-template-columns:1fr} .cta-card{padding:40px 24px} }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo"><div class="lens">🎓</div> LectureLens AI</a>
+  <div class="nav-links">
+    <a href="/">Home</a><a href="/capture">Capture</a><a href="/notes">Notes</a><a href="/learn">Learn</a>
+  </div>
+  <a href="/capture" class="nav-cta">Start Learning →</a>
+</nav>
+
+<main class="page">
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-badge"><div class="pdot"></div> Powered by Azure OpenAI GPT-4o & Azure AI Speech</div>
+    <h1>From Classroom to<br/><span class="grad">Concept Mastery</span></h1>
+    <p>Upload lecture recordings or board photos. LectureLens AI converts them into structured notes, adaptive quizzes, and audio explanations — personalized for you.</p>
+    <div class="hero-btns">
+      <a href="/capture" class="btn btn-primary btn-lg">🎤 Start Capturing Lectures</a>
+      <a href="#how" class="btn btn-outline btn-lg">See How It Works</a>
+    </div>
+  </section>
+
+  <div class="tech-strip">
+    <div class="container">
+      <p>Powered by Microsoft Azure</p>
+      <div class="tech-logos">
+        <div class="chip">⚡ Azure OpenAI GPT-4o</div>
+        <div class="chip">🔊 Azure AI Speech</div>
+        <div class="chip">👁️ GPT-4o Vision</div>
+        <div class="chip">☁️ Azure Blob Storage</div>
+      </div>
+    </div>
+  </div>
+
+  <section class="stages container" id="how">
+    <div class="sec-label">3-Stage AI Pipeline</div>
+    <h2 style="font-size:2rem;max-width:480px">How LectureLens AI Transforms Your Learning</h2>
+    <div class="stages-grid">
+      <div class="scard s1">
+        <div class="snum" style="color:var(--accent2)">Stage 01</div>
+        <div class="sicon">🎙️</div>
+        <h3>Capture & Extract</h3>
+        <p>Record lectures or upload board photos. AI extracts every word and diagram accurately.</p>
+        <ul class="sfeats">
+          <li>Azure Speech-to-Text for audio</li><li>GPT-4o Vision for board images</li>
+          <li>Handwritten notes extraction</li><li>Multi-language support</li>
+        </ul>
+      </div>
+      <div class="scard s2">
+        <div class="snum" style="color:var(--teal)">Stage 02</div>
+        <div class="sicon">🧠</div>
+        <h3>Concept Understanding</h3>
+        <p>Azure OpenAI GPT-4o organizes raw content into structured, clear study notes.</p>
+        <ul class="sfeats">
+          <li>Key concept identification</li><li>Topic hierarchy mapping</li>
+          <li>Simplified explanations</li><li>Examples & analogies</li>
+        </ul>
+      </div>
+      <div class="scard s3">
+        <div class="snum" style="color:var(--purple)">Stage 03</div>
+        <div class="sicon">🚀</div>
+        <h3>Personalized Learning</h3>
+        <p>Adaptive quizzes, smart summaries, and audio explanations tailored to your level.</p>
+        <ul class="sfeats">
+          <li>School / College / Engineering quizzes</li><li>MCQ & conceptual questions</li>
+          <li>Exam-focused summaries</li><li>Azure TTS audio explanations</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section container">
+    <div class="cta-card">
+      <h2>Ready to Transform Your Studies?</h2>
+      <p>Join students who use LectureLens AI to study smarter, not harder.</p>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+        <a href="/capture" class="btn btn-primary btn-lg">🎤 Upload Audio Lecture</a>
+        <a href="/capture" class="btn btn-teal btn-lg">📷 Upload Board Photo</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>LectureLens AI · Team AIforAI · IIT Guwahati · Track 3</p>
+    </div>
+  </footer>
+</main>
+<div id="toast"></div>
+<script src="/js/utils.js"></script>
+</body>
+</html>

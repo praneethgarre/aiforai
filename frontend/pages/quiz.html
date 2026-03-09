@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Adaptive Quiz — LectureLens AI</title>
+  <link rel="stylesheet" href="/css/styles.css"/>
+  <style>
+    .quiz-wrap { max-width:740px; margin:0 auto; padding:36px 0 100px; }
+    .qhdr { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px 26px; margin-bottom:22px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+    .qmeta h1 { font-size:1.2rem; margin-bottom:4px; }
+    .qmeta p { font-size:0.8rem; color:var(--text2); }
+    .qprog { flex:1; min-width:180px; }
+    .prog-lbl { display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text3); margin-bottom:6px; }
+    .prog-bar { height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
+    .prog-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--teal)); border-radius:3px; transition:width 0.4s ease; }
+    .qcard { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:30px; margin-bottom:18px; animation:qin 0.3s ease; }
+    @keyframes qin { from{opacity:0;transform:translateY(10px)} }
+    .qmeta2 { display:flex; align-items:center; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+    .qnum { font-size:0.75rem; font-weight:700; color:var(--text3); }
+    .qtext { font-size:1rem; font-weight:500; line-height:1.6; margin-bottom:22px; }
+    .opts { display:flex; flex-direction:column; gap:10px; }
+    .opt-btn { display:flex; align-items:flex-start; gap:12px; padding:13px 16px; border-radius:11px; border:1.5px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; text-align:left; font-family:'DM Sans',sans-serif; font-size:0.9rem; line-height:1.4; transition:all 0.2s; }
+    .opt-btn:hover:not(:disabled) { border-color:var(--accent); background:rgba(59,130,246,0.06); }
+    .opt-letter { width:28px; height:28px; border-radius:7px; background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; flex-shrink:0; transition:all 0.2s; }
+    .opt-btn.correct { border-color:var(--green); background:rgba(16,185,129,0.08); }
+    .opt-btn.correct .opt-letter { background:var(--green); border-color:var(--green); color:#fff; }
+    .opt-btn.wrong { border-color:var(--red); background:rgba(239,68,68,0.06); }
+    .opt-btn.wrong .opt-letter { background:var(--red); border-color:var(--red); color:#fff; }
+    .opt-btn:disabled { cursor:default; }
+    .exp-box { display:none; margin-top:16px; padding:14px 16px; border-radius:11px; font-size:0.875rem; line-height:1.6; }
+    .exp-box.show { display:block; }
+    .exp-correct { background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2); color:#6ee7b7; }
+    .exp-wrong { background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.2); color:#fca5a5; }
+    .conc-wrap { display:flex; flex-direction:column; gap:11px; }
+    textarea.ans-ta { width:100%; min-height:110px; padding:13px; background:var(--surface2); border:1.5px solid var(--border); border-radius:10px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.9rem; resize:vertical; outline:none; }
+    textarea.ans-ta:focus { border-color:var(--accent); }
+    .sample-ans { background:rgba(59,130,246,0.07); border:1px solid rgba(59,130,246,0.15); border-radius:10px; padding:13px 15px; font-size:0.85rem; color:var(--text2); }
+    .sample-ans h5 { font-size:0.72rem; color:var(--accent2); margin-bottom:7px; text-transform:uppercase; }
+    .qnav { display:flex; justify-content:space-between; align-items:center; margin-top:20px; }
+    /* Results */
+    .results { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:48px 30px; text-align:center; display:none; animation:qin 0.4s ease; }
+    .results.show { display:block; }
+    .score-ring { width:130px; height:130px; border-radius:50%; margin:0 auto 24px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'Syne',sans-serif; position:relative; }
+    .score-ring::before { content:''; position:absolute; inset:4px; border-radius:50%; border:5px solid var(--surface2); }
+    .snum { font-size:2.2rem; font-weight:800; line-height:1; }
+    .slbl { font-size:0.72rem; color:var(--text3); }
+    .results h2 { font-size:1.4rem; margin-bottom:8px; }
+    .results p { color:var(--text2); margin-bottom:24px; }
+    .rstats { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; margin-bottom:28px; }
+    .rstat .rnum { font-size:1.4rem; font-weight:700; }
+    .rstat .rlbl { font-size:0.75rem; color:var(--text3); }
+    .empty-state { text-align:center; padding:80px; }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo"><div class="lens">🎓</div> LectureLens AI</a>
+  <div class="nav-links"><a href="/">Home</a><a href="/capture">Capture</a><a href="/notes">Notes</a><a href="/learn">Learn</a></div>
+  <a href="/capture" class="nav-cta">Start Learning →</a>
+</nav>
+<div class="stage-bar">
+  <a href="/capture" class="stage-item done"><div class="stage-dot">✓</div> Capture</a><span class="stage-arrow">›</span>
+  <a href="/notes" class="stage-item done"><div class="stage-dot">✓</div> Notes</a><span class="stage-arrow">›</span>
+  <a href="/learn" class="stage-item done"><div class="stage-dot">✓</div> Learn</a><span class="stage-arrow">›</span>
+  <a href="/quiz" class="stage-item active"><div class="stage-dot">4</div> Quiz</a><span class="stage-arrow">›</span>
+  <a href="/summary" class="stage-item"><div class="stage-dot">5</div> Summary</a>
+</div>
+
+<main class="page page-with-stages">
+<div class="container quiz-wrap">
+  <div class="empty-state" id="emptyState" style="display:none">
+    <div style="font-size:3rem;margin-bottom:16px">🧪</div>
+    <h3>No Quiz Generated</h3>
+    <p class="text-muted" style="margin-bottom:24px">Go to Learning Hub and generate a quiz first.</p>
+    <a href="/learn" class="btn btn-primary">← Learning Hub</a>
+  </div>
+  <div id="quizContent" style="display:none">
+    <div class="qhdr">
+      <div class="qmeta"><h1 id="qtitle">Quiz</h1><p id="qmeta2"></p></div>
+      <div class="qprog">
+        <div class="prog-lbl"><span id="qprogTxt">Q 1 of ?</span><span id="qscoreTxt">Score: 0</span></div>
+        <div class="prog-bar"><div class="prog-fill" id="qprogFill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div id="qContainer"></div>
+    <div class="results" id="resultsBox">
+      <div class="score-ring" id="scoreRing">
+        <div class="snum" id="finalPct">0%</div>
+        <div class="slbl">Score</div>
+      </div>
+      <h2 id="resTitle">Quiz Complete!</h2>
+      <p id="resMsg"></p>
+      <div class="rstats">
+        <div class="rstat"><div class="rnum text-green" id="rCorrect">0</div><div class="rlbl">Correct</div></div>
+        <div class="rstat"><div class="rnum text-red" id="rWrong">0</div><div class="rlbl">Wrong</div></div>
+        <div class="rstat"><div class="rnum text-amber" id="rSkip">0</div><div class="rlbl">Skipped</div></div>
+      </div>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="restart()">🔄 Retake</button>
+        <a href="/summary" class="btn btn-teal">📋 Summary →</a>
+        <a href="/learn" class="btn btn-outline">← Back</a>
+      </div>
+    </div>
+  </div>
+</div>
+</main>
+<div id="toast"></div>
+<script src="/js/utils.js"></script>
+<script>
+  let quiz, cur=0, score=0, answers=[];
+
+  function init() {
+    quiz = Store.get('quiz');
+    if (!quiz?.questions?.length) { document.getElementById('emptyState').style.display='block'; return; }
+    document.getElementById('quizContent').style.display='block';
+    document.getElementById('qtitle').textContent = quiz.title||'Quiz';
+    document.getElementById('qmeta2').textContent = `${quiz.totalQuestions} questions · ${quiz.estimatedTime||'—'} · ${quiz.level||''} level`;
+    answers = new Array(quiz.questions.length).fill(null);
+    showQ(0);
+  }
+
+  function showQ(idx) {
+    const q = quiz.questions[idx];
+    if (!q) { showResults(); return; }
+    cur = idx;
+    const total = quiz.questions.length;
+    document.getElementById('qprogTxt').textContent = `Q ${idx+1} of ${total}`;
+    document.getElementById('qscoreTxt').textContent = `Score: ${Math.floor(score)}`;
+    document.getElementById('qprogFill').style.width = `${(idx/total)*100}%`;
+
+    const container = document.getElementById('qContainer');
+    container.innerHTML = '';
+    const answered = answers[idx] !== null;
+    const diffBadge = {easy:'badge-green',medium:'badge-amber',hard:'badge-purple'};
+    const card = document.createElement('div');
+    card.className = 'qcard';
+    card.innerHTML = `
+      <div class="qmeta2">
+        <span class="qnum">Q${idx+1}</span>
+        <span class="badge ${diffBadge[q.difficulty]||'badge-blue'}">${q.difficulty||'medium'}</span>
+        <span class="tag">${q.concept||''}</span>
+        <span class="badge ${q.type==='mcq'?'badge-blue':'badge-teal'}">${q.type==='mcq'?'MCQ':'Conceptual'}</span>
+      </div>
+      <div class="qtext">${q.question}</div>
+      ${q.type==='mcq' ? renderMCQ(q,idx,answered) : renderConceptual(q,idx,answered)}
+      <div class="qnav">
+        <button class="btn btn-outline btn-sm" onclick="showQ(${idx-1})" ${idx===0?'disabled':''}>← Prev</button>
+        <div style="display:flex;gap:8px">
+          ${!answered && q.type==='conceptual' ? `<button class="btn btn-outline btn-sm" onclick="skip(${idx})">Skip</button>` : ''}
+          ${idx < total-1
+            ? `<button class="btn btn-primary btn-sm" onclick="showQ(${idx+1})">Next →</button>`
+            : `<button class="btn btn-teal btn-sm" onclick="showResults()">Finish ✓</button>`}
+        </div>
+      </div>`;
+    container.appendChild(card);
+  }
+
+  function renderMCQ(q, idx, answered) {
+    const ua = answers[idx];
+    return `<div class="opts">${(q.options||[]).map((opt,i)=>{
+      const L=['A','B','C','D'][i];
+      let cls='opt-btn';
+      if (answered) {
+        if (L===q.correctAnswer) cls+=' correct';
+        else if (L===ua) cls+=' wrong';
+      }
+      return `<button class="${cls}" onclick="pickMCQ(${idx},'${L}')" ${answered?'disabled':''}>
+        <span class="opt-letter">${L}</span>${opt}
+      </button>`;
+    }).join('')}</div>
+    ${answered?`<div class="exp-box show ${ua===q.correctAnswer?'exp-correct':'exp-wrong'}">
+      ${ua===q.correctAnswer?'✓ Correct! ':'✗ Incorrect. '}${q.explanation||''}</div>`:''}`;
+  }
+
+  function renderConceptual(q, idx, answered) {
+    return `<div class="conc-wrap">
+      <textarea class="ans-ta" id="ca_${idx}" placeholder="Write your answer here...">${answers[idx]&&answers[idx]!=='SKIPPED'?answers[idx]:''}</textarea>
+      <button class="btn btn-primary btn-sm" onclick="submitCon(${idx})" style="align-self:flex-start">Submit Answer</button>
+      ${answered&&answered!=='SKIPPED'?`<div class="sample-ans"><h5>💡 Model Answer</h5><p>${q.sampleAnswer||''}</p></div>`:''}
+    </div>`;
+  }
+
+  function pickMCQ(idx, L) {
+    if (answers[idx]!==null) return;
+    answers[idx]=L;
+    if (L===quiz.questions[idx].correctAnswer) score++;
+    showQ(idx);
+  }
+
+  function submitCon(idx) {
+    const v = document.getElementById(`ca_${idx}`)?.value.trim();
+    if (!v) return showToast('Write an answer first','error');
+    answers[idx]=v; score+=0.5; showQ(idx);
+    showToast('Answer submitted — compare with model answer','success');
+  }
+
+  function skip(idx) { answers[idx]='SKIPPED'; showQ(idx+1); }
+
+  function showResults() {
+    document.getElementById('qContainer').style.display='none';
+    const total=quiz.questions.length;
+    const pct=Math.round((score/total)*100);
+    const correct=answers.filter((a,i)=>a===quiz.questions[i].correctAnswer||(a&&a!=='SKIPPED'&&quiz.questions[i].type==='conceptual')).length;
+    const skipped=answers.filter(a=>a==='SKIPPED').length;
+    document.getElementById('finalPct').textContent=pct+'%';
+    document.getElementById('rCorrect').textContent=correct;
+    document.getElementById('rWrong').textContent=total-correct-skipped;
+    document.getElementById('rSkip').textContent=skipped;
+    const titles={90:'🏆 Excellent!',70:'👏 Well Done!',50:'📚 Keep Practicing',0:'💪 Try Again!'};
+    const tk=Object.keys(titles).reverse().find(t=>pct>=t);
+    document.getElementById('resTitle').textContent=titles[tk];
+    document.getElementById('resMsg').textContent=`You scored ${pct}% · ${pct>=70?'Great understanding!':'Review notes and try again.'}`;
+    const ring=document.getElementById('scoreRing');
+    ring.style.background=`conic-gradient(${pct>=70?'var(--green)':pct>=50?'var(--amber)':'var(--red)'} ${pct*3.6}deg, var(--surface2) 0deg)`;
+    document.getElementById('qprogFill').style.width='100%';
+    document.getElementById('resultsBox').classList.add('show');
+  }
+
+  function restart() {
+    score=0; answers=new Array(quiz.questions.length).fill(null);
+    document.getElementById('qContainer').style.display='block';
+    document.getElementById('resultsBox').classList.remove('show');
+    showQ(0);
+  }
+
+  init();
+</script>
+</body>
+</html>
