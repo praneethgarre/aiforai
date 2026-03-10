@@ -443,7 +443,7 @@
   function updateUI() {
     const hasFile = !!(audioFile || imageFile);
     document.getElementById('extractBtn').disabled  = !hasFile;
-    document.getElementById('processBtn').disabled  = !transcript;
+    document.getElementById('processBtn').disabled  = !(transcript && transcript.length > 0);
     document.getElementById('statusTxt').textContent = hasFile
       ? (transcript ? '✓ Text extracted — click Process to generate notes' : 'Click Extract Text to begin')
       : 'Select an audio file or image to begin';
@@ -451,31 +451,45 @@
 
   // ── EXTRACT TEXT (Stage 1 API call) ───────────────────────────
   async function doExtract() {
-    if (!audioFile && !imageFile) return showToast('Please select a file first', 'error');
-    showLoader('Extracting content...', 'Sending to Azure AI for processing');
-    try {
-      const fd = new FormData();
-      let result;
-      if (imageFile) {
-        fd.append('image', imageFile);
-        result = await apiUpload('/api/transcribe/image', fd);
-      } else {
-        fd.append('audio', audioFile);
-        result = await apiUpload('/api/transcribe/audio', fd);
-      }
-      transcript = result.transcript;
-      document.getElementById('transcriptBox').textContent = transcript;
-      document.getElementById('transcriptSec').classList.add('show');
-      Store.set('transcript', transcript);
-      Store.set('level', document.getElementById('levelSel').value);
-      Store.set('subject', document.getElementById('subjectIn').value);
-      updateUI();
-      showToast('Content extracted successfully!', 'success');
-      if (result.demo) showToast('Demo mode — add Azure keys for real transcription', 'info');
-    } catch(e) {
-      showToast(e.message, 'error');
-    } finally { hideLoader(); }
+  if (!audioFile && !imageFile)
+    return showToast('Please select a file first', 'error');
+
+  showLoader('Extracting content...', 'Sending to AI for processing');
+
+  try {
+    const fd = new FormData();
+    let result;
+
+    if (imageFile) {
+      fd.append('image', imageFile);
+      result = await apiUpload('/api/transcribe/image', fd);
+    } else {
+      fd.append('audio', audioFile);
+      result = await apiUpload('/api/transcribe/audio', fd);
+    }
+
+    // get transcript
+    transcript = result.text || result.transcript || "";
+
+    // display transcript
+    document.getElementById('transcriptBox').textContent = transcript;
+    document.getElementById('transcriptSec').classList.add('show');
+
+    // store data
+    Store.set('transcript', transcript);
+    Store.set('level', document.getElementById('levelSel').value);
+    Store.set('subject', document.getElementById('subjectIn').value);
+
+    updateUI();
+
+    showToast('Content extracted successfully!', 'success');
+
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    hideLoader();
   }
+}
 
   // ── PROCESS NOTES (Stage 2 API call) ──────────────────────────
   async function doProcess() {
