@@ -1,4 +1,4 @@
-# 🎓 LectureLens AI
+#  LectureLens AI
 
 > Team AIforAI · IIT Guwahati · Track 3
 
@@ -9,7 +9,6 @@
 npm install
 
 # 2. Add Azure keys
-cp .env.example .env
 # Edit .env and add your keys
 
 # 3. Run
@@ -44,7 +43,7 @@ lecturelens/
 └── package.json
 ```
 
-## Azure Keys Needed
+## api Keys Needed
 | Key | Where to get |
 |-----|-------------|
 | AZURE_OPENAI_ENDPOINT | Azure Portal → OpenAI resource |
